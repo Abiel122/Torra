@@ -1,0 +1,48 @@
+{
+  "name": "torra",
+  "version": "4.0.0",
+  "description": "TOR Anonymous Manager — CLI TUI for Tor privacy with AI proxy bridge",
+  "type": "module",
+  "bin": {
+    "torra": "./dist/cli.js",
+    "pcurl": "./dist/wrappers/pcurl.js",
+    "pcpip": "./dist/wrappers/pcpip.js",
+    "pcpython": "./dist/wrappers/pcpython.js",
+    "pcnpm": "./dist/wrappers/pcnpm.js",
+    "pcwget": "./dist/wrappers/pcwget.js",
+    "opencode": "./dist/wrappers/opencode.js",
+    "9router": "./dist/wrappers/router9.js",
+    "tor-run": "./dist/wrappers/tor-run.js",
+    "torip": "./dist/wrappers/torip.js",
+    "realip": "./dist/wrappers/realip.js",
+    "leakcheck": "./dist/wrappers/leakcheck.js"
+  },
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "start": "node dist/cli.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "ink": "^7.1.0",
+    "react": "^19.0.0",
+    "@inkjs/ui": "^2.0.0",
+    "ink-gradient": "^4.0.1",
+    "ink-big-text": "^2.0.0",
+    "execa": "^9.6.1",
+    "conf": "^15.1.0",
+    "socks-proxy-agent": "^8.0.5",
+    "http-proxy": "^1.18.1",
+    "chalk": "^5.4.0",
+    "boxen": "^8.0.1",
+    "strip-ansi": "^7.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/http-proxy": "^1.17.16",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.0"
+  }
+}
