@@ -1,3 +1,5 @@
+import https from 'node:https'
+import http from 'node:http'
 import { loadState } from '../state/store.js'
 import { SocksProxyAgent } from 'socks-proxy-agent'
 
@@ -28,28 +30,34 @@ function extractIp(text: string, isJson: boolean): string | null {
   return text.trim() || null
 }
 
-async function fetchWithAgent(url: string, agent?: SocksProxyAgent, timeout = 8000): Promise<string | null> {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), timeout)
-
-  try {
-    const res = await fetch(url, {
-      ...(agent ? { agent: agent as never } : {}),
-      signal: controller.signal,
+function httpsGet(url: string, agent?: SocksProxyAgent, timeout = 8000): Promise<string | null> {
+  return new Promise((resolve) => {
+    const opts: https.RequestOptions = {
+      method: 'GET',
+      timeout,
       headers: { 'User-Agent': 'curl/8.0' },
-    } as RequestInit)
-    if (!res.ok) return null
-    return await res.text()
-  } catch {
-    return null
-  } finally {
-    clearTimeout(timer)
-  }
+      rejectUnauthorized: true,
+    }
+
+    if (agent) {
+      opts.agent = agent
+    }
+
+    const req = https.request(url, opts, (res) => {
+      let data = ''
+      res.on('data', (chunk: Buffer) => { data += chunk.toString() })
+      res.on('end', () => { resolve(data) })
+    })
+
+    req.on('error', () => { resolve(null) })
+    req.on('timeout', () => { req.destroy(); resolve(null) })
+    req.end()
+  })
 }
 
 export async function getRealIp(timeout = 8000): Promise<string | null> {
   for (const url of IP_ENDPOINTS) {
-    const text = await fetchWithAgent(url, undefined, timeout)
+    const text = await httpsGet(url, undefined, timeout)
     if (!text) continue
     const isJson = url.includes('json')
     const ip = extractIp(text, isJson)
@@ -64,7 +72,7 @@ export async function getTorIp(timeout = 15000): Promise<string | null> {
   const agent = new SocksProxyAgent(proxyUrl)
 
   for (const url of IP_ENDPOINTS) {
-    const text = await fetchWithAgent(url, agent, timeout)
+    const text = await httpsGet(url, agent, timeout)
     if (!text) continue
     const isJson = url.includes('json')
     const ip = extractIp(text, isJson)
@@ -79,20 +87,12 @@ export async function getIpInfo(useTor = false, timeout = 15000): Promise<IpInfo
     ? new SocksProxyAgent(`socks5h://127.0.0.1:${state.torSocksPort}`)
     : undefined
 
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), timeout)
+  const text = await httpsGet('https://ipinfo.io/json', agent, timeout)
+  if (!text) return null
 
   try {
-    const res = await fetch('https://ipinfo.io/json', {
-      ...(agent ? { agent: agent as never } : {}),
-      signal: controller.signal,
-      headers: { 'User-Agent': 'curl/8.0' },
-    } as RequestInit)
-    if (res.ok) return (await res.json()) as IpInfo
-    return null
+    return JSON.parse(text) as IpInfo
   } catch {
     return null
-  } finally {
-    clearTimeout(timer)
   }
 }
