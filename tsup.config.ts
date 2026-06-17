@@ -14,6 +14,7 @@ export default defineConfig({
     'wrappers/torip': 'src/wrappers/torip.ts',
     'wrappers/realip': 'src/wrappers/realip.ts',
     'wrappers/leakcheck': 'src/wrappers/leakcheck.ts',
+    'proxy/preload': 'src/proxy/preload.ts',
   },
   format: ['esm'],
   target: 'node18',
